@@ -19,5 +19,6 @@ class DatabaseSeeder extends Seeder
             ['id' => 1, 'name' => 'Budi Santoso', 'email' => 'budi@telkom.edu', 'password' => bcrypt('password')],
             ['id' => 2, 'name' => 'Siti Aminah', 'email' => 'siti@telkom.edu', 'password' => bcrypt('password')]
         ]);
+        User::create(['name' => 'Nanda Pratama', 'email' => 'nanda@student.telkomuniversity.ac.id', 'password' => bcrypt('password')]);
     }
 }
