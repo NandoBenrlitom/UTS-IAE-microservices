@@ -47,4 +47,4 @@ Route::get('/orders/product/{id}', function ($id) {
     return response()->json([
         ['order_id' => 'ORD-123', 'buyer_name' => 'Budi Santoso', 'qty' => 1]
     ]);
-});
+})
