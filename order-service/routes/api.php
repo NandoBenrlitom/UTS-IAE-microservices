@@ -24,9 +24,9 @@ Route::post('/orders', function (Request $request) {
 
     // Simpan Transaksi
     $order = Order::create([
+        'order_id' => 'ORD-' . time() . '-' . rand(100, 999),
         'user_id' => $userId,
         'product_id' => $productId,
-        'total_price' => $productResponse['price'],
         'status' => 'SUCCESS'
     ]);
 
