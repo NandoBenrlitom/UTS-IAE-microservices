@@ -15,12 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-        Product::create(['name' => 'Mechanical Keyboard', 'price' => 850000]);
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        \App\Models\Product::insert([
+            ['id' => 101, 'name' => 'Laptop EAI Pro', 'price' => 15000000],
+            ['id' => 102, 'name' => 'Keyboard Mechanical', 'price' => 800000]
         ]);
     }
 }
