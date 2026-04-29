@@ -1,13 +1,11 @@
 <?php
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 
-// Simulasi Database Transaksi
-$orders = [];
-
 // CONSUMER UTAMA: Menerima request transaksi, menarik data dari service lain
-Route::post('/orders', function (Request $request) use (&$orders) {
+Route::post('/orders', function (Request $request) {
     $userId = $request->input('user_id');
     $productId = $request->input('product_id');
 
@@ -23,28 +21,31 @@ Route::post('/orders', function (Request $request) use (&$orders) {
         return response()->json(['message' => 'Product tidak valid'], 400);
     }
 
-    // Buat Transaksi
-    $newOrder = [
+    // Buat Transaksi di DB MySQL
+    $newOrder = Order::create([
         'order_id' => 'ORD-' . time(),
-        'user' => $userResponse->json(),
-        'product' => $productResponse->json(),
+        'user_id' => $userId,
+        'product_id' => $productId,
         'status' => 'Completed'
-    ];
+    ]);
 
-    // Dalam realita, $newOrder di-save ke DB MySQL di sini.
-    return response()->json(['message' => 'Order berhasil!', 'data' => $newOrder], 201);
+    return response()->json([
+        'message' => 'Order berhasil!',
+        'data' => [
+            'order' => $newOrder,
+            'user' => $userResponse->json(),
+            'product' => $productResponse->json()
+        ]
+    ], 201);
 });
 
 // PROVIDER: Menyediakan endpoint untuk histori
 Route::get('/orders/user/{id}', function ($id) {
-    // Simulasi data balikan
-    return response()->json([
-        ['order_id' => 'ORD-123', 'product_name' => 'Laptop EAI Pro', 'status' => 'Completed']
-    ]);
+    $orders = Order::where('user_id', $id)->get();
+    return response()->json($orders);
 });
 
 Route::get('/orders/product/{id}', function ($id) {
-    return response()->json([
-        ['order_id' => 'ORD-123', 'buyer_name' => 'Budi Santoso', 'qty' => 1]
-    ]);
+    $orders = Order::where('product_id', $id)->get();
+    return response()->json($orders);
 });

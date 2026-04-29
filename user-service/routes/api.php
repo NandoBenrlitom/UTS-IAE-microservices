@@ -1,16 +1,11 @@
 <?php
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 
-// Data Statis (Simulasi Database MySQL)
-$users = [
-    ['id' => 1, 'name' => 'Budi Santoso', 'email' => 'budi@telkom.edu'],
-    ['id' => 2, 'name' => 'Siti Aminah', 'email' => 'siti@telkom.edu']
-];
-
 // PROVIDER: Menyediakan data user
-Route::get('/users/{id}', function ($id) use ($users) {
-    $user = collect($users)->firstWhere('id', (int)$id);
+Route::get('/users/{id}', function ($id) {
+    $user = User::find((int)$id);
     if (!$user) return response()->json(['message' => 'User not found'], 404);
     return response()->json($user);
 });
