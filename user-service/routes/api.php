@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 
@@ -14,4 +15,22 @@ Route::get('/users/{id}/history', function ($id) {
         'user' => User::find($id),
         'order_history' => $response->json()
     ]);
+=======
+<?php
+
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [UserController::class, 'register']);
+    Route::post('/login', [UserController::class, 'login']);
 });
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('/auth/profile', [UserController::class, 'profile']);
+    Route::post('/auth/logout', [UserController::class, 'logout']);
+>>>>>>> 1c268f46641945a4a0c1cc130ce868befb2e46a1
+});
+
+Route::get('/users/{id}', [UserController::class, 'show'])->whereNumber('id');
+Route::get('/users/{id}/history', [UserController::class, 'history'])->whereNumber('id');
