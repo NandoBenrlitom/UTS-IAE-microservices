@@ -1,51 +1,44 @@
 <?php
-use App\Models\Order;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
+use App\Models\Order;
 
-// CONSUMER UTAMA: Menerima request transaksi, menarik data dari service lain
+// 1. Menerima request transaksi & cek ke service lain (Consumer)
 Route::post('/orders', function (Request $request) {
-    $userId = $request->input('user_id');
-    $productId = $request->input('product_id');
+    $userId = $request->user_id;
+    $productId = $request->product_id;
 
-    // Tarik data dari UserService (Port 8001)
+    // Cek User ke User-Service (Port 8001)
     $userResponse = Http::get("http://127.0.0.1:8001/api/users/{$userId}");
     if ($userResponse->failed()) {
-        return response()->json(['message' => 'User tidak valid'], 400);
+        return response()->json(['message' => 'Data User tidak ditemukan'], 404);
     }
 
-    // Tarik data dari ProductService (Port 8002)
+    // Cek Product ke Product-Service (Port 8002)
     $productResponse = Http::get("http://127.0.0.1:8002/api/products/{$productId}");
     if ($productResponse->failed()) {
-        return response()->json(['message' => 'Product tidak valid'], 400);
+        return response()->json(['message' => 'Data Product tidak ditemukan'], 404);
     }
 
-    // Buat Transaksi di DB MySQL
-    $newOrder = Order::create([
-        'order_id' => 'ORD-' . time(),
+    // Simpan Transaksi
+    $order = Order::create([
         'user_id' => $userId,
         'product_id' => $productId,
-        'status' => 'Completed'
+        'total_price' => $productResponse['price'],
+        'status' => 'SUCCESS'
     ]);
 
-    return response()->json([
-        'message' => 'Order berhasil!',
-        'data' => [
-            'order' => $newOrder,
-            'user' => $userResponse->json(),
-            'product' => $productResponse->json()
-        ]
-    ], 201);
+    return response()->json(['message' => 'Transaksi Berhasil', 'detail' => $order], 201);
 });
 
-// PROVIDER: Menyediakan endpoint untuk histori
+// 2. Menyediakan histori transaksi user (Provider)
 Route::get('/orders/user/{id}', function ($id) {
-    $orders = Order::where('user_id', $id)->get();
-    return response()->json($orders);
+    return response()->json(Order::where('user_id', $id)->get());
 });
 
+// 3. Menyediakan histori penjualan produk (Provider)
 Route::get('/orders/product/{id}', function ($id) {
-    $orders = Order::where('product_id', $id)->get();
-    return response()->json($orders);
+    return response()->json(Order::where('product_id', $id)->get());
 });
