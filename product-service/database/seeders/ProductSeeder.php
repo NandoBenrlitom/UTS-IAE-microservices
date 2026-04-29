@@ -12,6 +12,11 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        for ($i = 1; $i <= 5; $i++) {
+            \App\Models\Product::create([
+                'name' => 'Produk ' . $i . ' Random',
+                'price' => rand(10000, 500000)
+            ]);
+        }
     }
 }
