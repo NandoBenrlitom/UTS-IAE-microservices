@@ -3,6 +3,8 @@ FROM php:8.2-cli
 
 # Instalasi dependensi sistem yang dibutuhkan Laravel
 RUN apt-get update -y && apt-get install -y \
+    ca-certificates \
+    curl \
     libmcrypt-dev \
     git \
     unzip \
