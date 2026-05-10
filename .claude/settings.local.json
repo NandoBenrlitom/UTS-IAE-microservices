@@ -16,7 +16,8 @@
       "Bash(curl -s http://localhost:8003/api/orders/ORD-1778417815-480)",
       "Bash(curl -s -X POST http://localhost:8003/api/orders -H \"Content-Type: application/json\" -d '{\"user_id\":999,\"product_id\":999}')",
       "Bash(curl -s http://localhost:8003/api/orders)",
-      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(json.dumps\\(data[0] if data else {}, indent=2\\)\\)\")"
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(json.dumps\\(data[0] if data else {}, indent=2\\)\\)\")",
+      "Bash(xxd)"
     ],
     "additionalDirectories": [
       "\\tmp"
