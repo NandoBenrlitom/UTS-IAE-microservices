@@ -15,36 +15,51 @@ class ProcessOrder implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $userId;
-    protected $productId;
+    public int $tries = 3;
+    public int $backoff = 5;
 
-    // Menerima data dari request API
-    public function __construct($userId, $productId)
+    protected int $orderId;
+
+    public function __construct(int $orderId)
     {
-        $this->userId = $userId;
-        $this->productId = $productId;
+        $this->orderId = $orderId;
     }
 
-    // Proses ini akan dijalankan oleh Redis di latar belakang
-    public function handle()
+    public function handle(): void
     {
-        Log::info("Memulai proses asinkron untuk User: {$this->userId}, Product: {$this->productId}");
-
-        // Memanggil service lain secara asinkron di background menggunakan nama container docker
-        $user = Http::get("http://user_service:8000/api/users/{$this->userId}");
-        $product = Http::get("http://product_service:8000/api/products/{$this->productId}");
-
-        // Jika data valid, simpan ke database order
-        if ($user->successful() && $product->successful()) {
-            Order::create([
-                'user_id' => $this->userId,
-                'product_id' => $this->productId,
-                'total_price' => $product['price'],
-                'status' => 'SUCCESS'
-            ]);
-            Log::info("Transaksi asinkron berhasil disimpan!");
-        } else {
-            Log::error("Data User atau Product tidak ditemukan.");
+        $order = Order::find($this->orderId);
+        if (!$order) {
+            Log::error("ProcessOrder: order #{$this->orderId} tidak ditemukan");
+            return;
         }
+
+        Log::info("ProcessOrder: mulai memproses order {$order->order_id}");
+
+        // Simulasi proses async (misal: validasi pembayaran)
+        sleep(2);
+
+        $userResponse = Http::timeout(5)->get("http://user-service:8000/api/users/{$order->user_id}");
+        $productResponse = Http::timeout(5)->get("http://product-service:8000/api/products/{$order->product_id}");
+
+        if ($userResponse->successful() && $productResponse->successful()) {
+            $product = $productResponse->json();
+            $order->update([
+                'total_price' => $product['price'] ?? 0,
+                'status' => 'SUCCESS',
+            ]);
+            Log::info("ProcessOrder: order {$order->order_id} SUCCESS");
+        } else {
+            $order->update(['status' => 'FAILED']);
+            Log::error("ProcessOrder: order {$order->order_id} FAILED - user atau product tidak valid");
+        }
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        $order = Order::find($this->orderId);
+        if ($order) {
+            $order->update(['status' => 'FAILED']);
+        }
+        Log::error("ProcessOrder gagal total: " . $e->getMessage());
     }
 }

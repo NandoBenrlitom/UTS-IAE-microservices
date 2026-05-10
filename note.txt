@@ -1,0 +1,18 @@
+Nama Kelompok : UTS IAE - Microservices Asinkron
+Mata Kuliah   : Enterprise Application Integration
+Program Studi : S1 Sistem Informasi - Telkom University
+
+Anggota:
+1. Nanda Pratama Sugiarto    - 102062400019
+2. Nadhif Maulana Faizalty   - 102062400016
+3. Muh Naufal Rabbani Marun  - 102062400038
+4. Vincent Imanuel Putra     - 102062400026
+
+Link Video Demo: <ISI DENGAN URL VIDEO YOUTUBE / GDRIVE>
+
+Cakupan implementasi:
+- Microservices (3 service Laravel 11) dengan Docker & docker-compose.
+- Komunikasi asinkron menggunakan Laravel Queue + Redis.
+- Queue-worker terpisah sebagai consumer (ProcessOrder job).
+- Challenge: deployment Kubernetes (folder k8s/) dengan ConfigMap, Secret,
+  PVC, Deployment, Service, dan Ingress.

@@ -1,0 +1,33 @@
+# Akses eksternal - opsional. Aktif jika ingress-controller tersedia (mis. nginx-ingress di minikube).
+# Alternatif tanpa ingress: gunakan `kubectl port-forward svc/order-service 8003:8000 -n uts-iae`.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uts-ingress
+  namespace: uts-iae
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: uts.local
+      http:
+        paths:
+          - path: /user(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: user-service
+                port: { number: 8000 }
+          - path: /product(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: product-service
+                port: { number: 8000 }
+          - path: /order(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: order-service
+                port: { number: 8000 }

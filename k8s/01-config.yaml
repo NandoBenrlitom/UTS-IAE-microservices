@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: laravel-config
+  namespace: uts-iae
+data:
+  APP_NAME: "UTS-IAE"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  LOG_CHANNEL: "stderr"
+  DB_CONNECTION: "mysql"
+  DB_HOST: "mysql"
+  DB_PORT: "3306"
+  DB_USERNAME: "root"
+  CACHE_STORE: "redis"
+  SESSION_DRIVER: "file"
+  REDIS_CLIENT: "phpredis"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  QUEUE_CONNECTION: "redis"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: laravel-secret
+  namespace: uts-iae
+type: Opaque
+stringData:
+  APP_KEY: "base64:8f3vJtR3Q7HlXkY8wF8VbZ1MvTjOdN0xPAQ9aXyOu6E="
+  DB_PASSWORD: "root"
+  MYSQL_ROOT_PASSWORD: "root"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init
+  namespace: uts-iae
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS uts_user;
+    CREATE DATABASE IF NOT EXISTS uts_product;
+    CREATE DATABASE IF NOT EXISTS uts_order;

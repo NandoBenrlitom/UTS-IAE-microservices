@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('order_id')->unique();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('product_id');
-            $table->string('status')->default('Completed');
+            $table->decimal('total_price', 15, 2)->default(0);
+            $table->string('status')->default('PENDING');
             $table->timestamps();
         });
     }

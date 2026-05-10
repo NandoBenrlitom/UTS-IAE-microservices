@@ -1,7 +1,7 @@
-# Menggunakan image PHP 8.2 berbasis CLI
+# Image PHP 8.2 CLI
 FROM php:8.2-cli
 
-# Instalasi dependensi sistem yang dibutuhkan Laravel
+# Dependensi sistem
 RUN apt-get update -y && apt-get install -y \
     ca-certificates \
     curl \
@@ -10,26 +10,26 @@ RUN apt-get update -y && apt-get install -y \
     unzip \
     libpng-dev \
     libonig-dev \
-    libxml2-dev
+    libxml2-dev \
+    default-mysql-client \
+ && rm -rf /var/lib/apt/lists/*
 
-# Instalasi ekstensi PHP untuk MySQL dan Redis
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
-RUN pecl install redis && docker-php-ext-enable redis
+# Ekstensi PHP - pakai install-php-extensions (lebih reliable dari pecl)
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo_mysql mbstring exif pcntl bcmath gd redis
 
-# Instalasi Composer
+# Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Set working directory di dalam container
 WORKDIR /app
-
-# Copy semua file proyek ke dalam container
 COPY . /app
 
-# Install dependencies (setelah COPY agar artisan tersedia)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+ && chmod -R 775 storage bootstrap/cache
 
-# Set permission storage dan cache
-RUN chmod -R 775 storage bootstrap/cache
+EXPOSE 8000
 
-# Jalankan migrate lalu start server
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+# Tunggu MySQL siap, migrate, lalu start server.
+# queue-worker me-override CMD ini di docker-compose.yml.
+CMD ["sh", "-c", "until mysqladmin --skip-ssl ping -h \"$DB_HOST\" -u\"$DB_USERNAME\" -p\"$DB_PASSWORD\" --silent; do echo waiting for mysql; sleep 2; done && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"]
