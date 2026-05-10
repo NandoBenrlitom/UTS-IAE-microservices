@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Database Utama (MySQL)
+  mysql:
+    image: mysql:8.0
+    container_name: uts_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: uts_microservices
+    ports:
+      - "3306:3306"
+
+  # Redis untuk sistem Antrean (Asinkron)
+  redis:
+    image: redis:alpine
+    container_name: uts_redis
+    ports:
+      - "6379:6379"
+
+  # User Service (Port 8001)
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user_service
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mysql
+
+  # Product Service (Port 8002)
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product_service
+    ports:
+      - "8002:8000"
+    depends_on:
+      - mysql
+
+  # Order Service (Port 8003)
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order_service
+    ports:
+      - "8003:8000"
+    depends_on:
+      - mysql
+      - redis
+
+  # Queue Worker untuk memproses transaksi di background (Asinkron)
+  queue-worker:
+    build:
+      context: ./order-service
+    container_name: uts_worker
+    command: php artisan queue:work redis --tries=3
+    depends_on:
+      - redis
+      - mysql
