@@ -10,6 +10,16 @@ services:
       MYSQL_DATABASE: uts_microservices
     ports:
       - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-net
 
   # Redis untuk sistem Antrean (Asinkron)
   redis:
@@ -17,6 +27,8 @@ services:
     container_name: uts_redis
     ports:
       - "6379:6379"
+    networks:
+      - microservices-net
 
   # User Service (Port 8001)
   user-service:
@@ -26,8 +38,20 @@ services:
     container_name: user_service
     ports:
       - "8001:8000"
+    environment:
+      APP_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: uts_user
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    networks:
+      - microservices-net
 
   # Product Service (Port 8002)
   product-service:
@@ -37,8 +61,20 @@ services:
     container_name: product_service
     ports:
       - "8002:8000"
+    environment:
+      APP_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: uts_product
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    networks:
+      - microservices-net
 
   # Order Service (Port 8003)
   order-service:
@@ -48,9 +84,23 @@ services:
     container_name: order_service
     ports:
       - "8003:8000"
+    environment:
+      APP_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: uts_order
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - microservices-net
 
   # Queue Worker untuk memproses transaksi di background (Asinkron)
   queue-worker:
@@ -58,6 +108,27 @@ services:
       context: ./order-service
     container_name: uts_worker
     command: php artisan queue:work redis --tries=3
+    environment:
+      APP_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: uts_order
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
     depends_on:
-      - redis
-      - mysql
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  mysql_data:

@@ -11,14 +11,14 @@ Route::post('/orders', function (Request $request) {
     $userId = $request->user_id;
     $productId = $request->product_id;
 
-    // Cek User ke User-Service (Port 8001)
-    $userResponse = Http::get("http://127.0.0.1:8001/api/users/{$userId}");
+    // Cek User ke User-Service (via Docker service name)
+    $userResponse = Http::get("http://user-service:8000/api/users/{$userId}");
     if ($userResponse->failed()) {
         return response()->json(['message' => 'Data User tidak ditemukan'], 404);
     }
 
-    // Cek Product ke Product-Service (Port 8002)
-    $productResponse = Http::get("http://127.0.0.1:8002/api/products/{$productId}");
+    // Cek Product ke Product-Service (via Docker service name)
+    $productResponse = Http::get("http://product-service:8000/api/products/{$productId}");
     if ($productResponse->failed()) {
         return response()->json(['message' => 'Data Product tidak ditemukan'], 404);
     }
