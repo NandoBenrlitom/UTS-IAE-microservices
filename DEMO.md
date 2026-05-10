@@ -287,20 +287,43 @@ order-service tidak peduli worker hidup atau tidak, dia cuma push ke Redis.
 
 ### 7c. Inspect Redis langsung
 
+> **Penting:** Laravel menambahkan **prefix** ke nama key Redis berdasarkan 
+> `APP_NAME`. Karena `APP_NAME=UTS-IAE` di docker-compose, key sebenarnya 
+> adalah `uts-iae-database-queues:default` - **bukan** `queues:default`.
+
 **Terminal A:**
 
 ```powershell
-docker exec uts_redis redis-cli LLEN queues:default
+# Lihat semua key Redis dulu (untuk konfirmasi nama key)
+docker exec uts_redis redis-cli KEYS "*"
 ```
 
-Tunjuk hasilnya: **5** (atau lebih kalau dari demo sebelumnya).
+Output akan menunjukkan dua key:
+```
+uts-iae-database-queues:default
+uts-iae-database-queues:default:notify
+```
+
+> "Laravel menambahkan prefix `uts-iae-database-` di depan nama key supaya 
+> tidak bentrok kalau Redis dipakai aplikasi lain. Mari kita cek isi antrian:"
 
 ```powershell
-docker exec uts_redis redis-cli LRANGE queues:default 0 0
+# Hitung jumlah job yang antri
+docker exec uts_redis redis-cli LLEN "uts-iae-database-queues:default"
 ```
 
+Tunjuk hasilnya: **5**.
+
+```powershell
+# Intip 1 job pertama
+docker exec uts_redis redis-cli LINDEX "uts-iae-database-queues:default" 0
+```
+
+Tunjuk JSON yang muncul - akan ada `"displayName":"App\\Jobs\\ProcessOrder"`.
+
 > "Lihat - 5 job antri di Redis. Ini bukti nyata Redis dipakai sebagai 
-> message broker. Job-nya berisi serialized PHP class `App\\Jobs\\ProcessOrder`."
+> message broker. Setiap job adalah serialized PHP class 
+> `App\\Jobs\\ProcessOrder` lengkap dengan data order_id-nya."
 
 ### 7d. Hidupkan worker, antrian habis
 
@@ -310,14 +333,14 @@ docker exec uts_redis redis-cli LRANGE queues:default 0 0
 docker compose start queue-worker
 ```
 
-Tunggu ~10 detik, lalu:
+Tunggu ~15 detik (5 job × ~2 detik per job), lalu:
 
 ```powershell
-docker compose logs --tail=20 queue-worker
-docker exec uts_redis redis-cli LLEN queues:default
+docker compose logs --tail=25 queue-worker
+docker exec uts_redis redis-cli LLEN "uts-iae-database-queues:default"
 ```
 
-Worker log akan menunjukkan 5 job RUNNING-DONE berturutan, dan `LLEN` jadi **0**.
+Worker log akan menunjukkan 5 job `RUNNING ... DONE` berturutan, dan `LLEN` jadi **0**.
 
 Kembali ke Postman, **Request 6 - GET All Orders** untuk konfirmasi 5 order baru semua sudah `SUCCESS`.
 
