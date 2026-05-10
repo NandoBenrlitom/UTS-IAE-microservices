@@ -4,8 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use App\Models\Order;
+use App\Jobs\ProcessOrder;
 
-// 1. Menerima request transaksi & cek ke service lain (Consumer)
+// 1. Menerima request transaksi & cek ke service lain (Consumer) - Sync
 Route::post('/orders', function (Request $request) {
     $userId = $request->user_id;
     $productId = $request->product_id;
@@ -33,6 +34,11 @@ Route::post('/orders', function (Request $request) {
     return response()->json(['message' => 'Transaksi Berhasil', 'detail' => $order], 201);
 });
 
+// Endpoint tambahan untuk mengecek histori semua order
+Route::get('/orders', function () {
+    return response()->json(Order::all());
+});
+
 // 2. Menyediakan histori transaksi user (Provider)
 Route::get('/orders/user/{id}', function ($id) {
     return response()->json(Order::where('user_id', $id)->get());
@@ -42,3 +48,4 @@ Route::get('/orders/user/{id}', function ($id) {
 Route::get('/orders/product/{id}', function ($id) {
     return response()->json(Order::where('product_id', $id)->get());
 });
+
