@@ -90,7 +90,7 @@ class UserController extends Controller
     public function history(int $id)
     {
         try {
-            $response = Http::get("http://127.0.0.1:8003/api/orders/user/{$id}");
+            $response = Http::get("http://order-service:8000/api/orders/user/{$id}");
 
             if ($response->failed()) {
                 return response()->json(['message' => 'Gagal menarik histori'], 502);

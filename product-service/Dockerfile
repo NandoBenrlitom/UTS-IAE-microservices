@@ -23,8 +23,11 @@ WORKDIR /app
 # Copy semua file proyek ke dalam container
 COPY . /app
 
-# Jalankan perintah composer install
-RUN composer install --no-scripts --no-autoloader && composer dump-autoloader
+# Install dependencies (setelah COPY agar artisan tersedia)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Menjalankan server Laravel
-CMD php artisan serve --host=0.0.0.0 --port=8000
+# Set permission storage dan cache
+RUN chmod -R 775 storage bootstrap/cache
+
+# Jalankan migrate lalu start server
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
